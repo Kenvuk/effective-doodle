@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MrSalih Insights</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin: 20px auto;
+        }
+        
+        h1 {
+            font-weight: 600;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 24px;
+            color: #111827;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        button {
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            background: #374151;
+        }
+        
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            display: none;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 24px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .tab.active {
+            color: #111827;
+            border-bottom: 2px solid #111827;
+        }
+        
+        .tab-content {
+            position: relative;
+            min-height: 200px;
+            overflow: hidden;
+        }
+        
+        .tab-pane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .tab-pane.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+        
+        .card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #111827;
+        }
+        
+        .card p {
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        
+        .value-badge {
+            display: inline-block;
+            background: #111827;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 18px;
+            margin-top: 12px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input, button {
+                width: 100%;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                flex-wrap: nowrap;
+                padding-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Domain Insights</h1>
+        
+        <div class="input-group">
+            <input type="text" id="domainInput" placeholder="Enter domain (e.g., example.com)" autocomplete="off">
+            <button id="analyzeBtn">Analyze Domain</button>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Analyzing domain, please wait...</p>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="tabs">
+                <div class="tab active" data-tab="overview">Overview</div>
+                <div class="tab" data-tab="seo">SEO Potential</div>
+                <div class="tab" data-tab="monetization">Monetization Ideas</div>
+                <div class="tab" data-tab="value">Estimated Value</div>
+            </div>
+            
+            <div class="tab-content">
+                <div class="tab-pane active" id="overview">
+                    <div class="card">
+                        <h3>Domain Overview</h3>
+                        <p id="overviewContent"></p>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="seo">
+                    <div class="card">
+                        <h3>SEO Analysis</h3>
+                        <p id="seoContent"></p>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="monetization">
+                    <div class="card">
+                        <h3>Monetization Opportunities</h3>
+                        <p id="monetizationContent"></p>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="value">
+                    <div class="card">
+                        <h3>Value Estimation</h3>
+                        <p id="valueContent"></p>
+                        <div class="value-badge" id="valueBadge"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Powered with love by MrSalih and Gemini API and lot of tea • Insights</p>
+    </footer>
+
+    <script>
+        // Configuration - easily swap API key here
+        const GEMINI_API_KEY = "AIzaSyBsrj-G-xnJHu5urlI-gjlL7_dnhGeBeJA";
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+        
+        // DOM Elements
+        const domainInput = document.getElementById('domainInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const tabs = document.querySelectorAll('.tab');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        // Content elements
+        const overviewContent = document.getElementById('overviewContent');
+        const seoContent = document.getElementById('seoContent');
+        const monetizationContent = document.getElementById('monetizationContent');
+        const valueContent = document.getElementById('valueContent');
+        const valueBadge = document.getElementById('valueBadge');
+        
+        // Event Listeners
+        analyzeBtn.addEventListener('click', analyzeDomain);
+        
+        domainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                analyzeDomain();
+            }
+        });
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+        
+        // Functions
+        function switchTab(tabId) {
+            // Update active tab
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update active tab pane
+            tabPanes.forEach(pane => {
+                if (pane.id === tabId) {
+                    pane.classList.add('active');
+                } else {
+                    pane.classList.remove('active');
+                }
+            });
+        }
+        
+        async function analyzeDomain() {
+            const domain = domainInput.value.trim();
+            
+            // Validate input
+            if (!domain) {
+                showError('Please enter a domain name');
+                return;
+            }
+            
+            // Simple domain validation
+            if (!isValidDomain(domain)) {
+                showError('Please enter a valid domain name (e.g., example.com)');
+                return;
+            }
+            
+            // Reset previous results and errors
+            hideError();
+            results.style.display = 'none';
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            
+            try {
+                // Prepare the prompt for Gemini
+                const prompt = `Provide a hyper detailed analysis of the domain "${domain}" with these sections:
+
+                
+            You are a professional domain name analyst.  
+The user will provide a domain name (example.com).  
+Your task is to generate a hyper-detailed, structured analysis of that domain.  
+
+Always return the result in clear, structured sections with headings and bullet points.  
+Keep the tone professional, concise, and useful for domain investors and SEO specialists.  
+
+# Output Format (very important)
+Return the analysis in Markdown format with the following structure:
+
+## Domain Overview
+- Domain: [user’s domain]
+- Age of domain (estimate if unknown)
+- Likely industry/niche
+- Memorability & branding strength
+
+## Estimated Value
+- Approximate domain value range (USD)
+- Factors influencing value (length, keywords, TLD, trends)
+- Comparison with similar domains
+
+## SEO Potential
+- Keyword strength
+- CPC (estimated, general ranges)
+- Search volume (estimate based on keyword intent)
+- Backlink potential
+- Traffic type (branded vs generic keyword)
+
+## Monetization Ideas
+- Possible use cases (blog, e-commerce, SaaS, informational site, brand site)
+- Parking potential (ads revenue estimate range if relevant)
+- Resale potential (marketplaces where it could sell)
+
+## Risks and Limitations
+- Trademark risk (if domain contains brand names)
+- Possible low demand factors
+- SEO competition
+
+## Final Recommendation
+- Short summary (2–3 sentences) giving a realistic outlook for this domain.
+
+
+                Format the response clearly with each section labeled exactly as above.`;
+                
+                // Call Gemini API
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the generated text - updated for current Gemini API structure
+                const generatedText = data.candidates[0].content.parts[0].text;
+                
+                // Parse the response and update the UI
+                parseAndDisplayResults(generatedText, domain);
+                
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                showError(`Failed to analyze domain: ${error.message}. Please check your API key and try again.`);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+        
+        function parseAndDisplayResults(text, domain) {
+            // Parse the response text to extract each section
+            const sections = {
+                overview: extractSection(text, 'Overview'),
+                seo: extractSection(text, 'SEO Potential'),
+                monetization: extractSection(text, 'Monetization Ideas'),
+                value: extractSection(text, 'Estimated Value')
+            };
+            
+            // Update the content areas
+            overviewContent.textContent = sections.overview || 'No overview available.';
+            seoContent.textContent = sections.seo || 'No SEO analysis available.';
+            monetizationContent.textContent = sections.monetization || 'No monetization ideas available.';
+            valueContent.textContent = sections.value || 'No value estimation available.';
+            
+            // Try to extract a dollar amount for the badge
+            const dollarMatch = sections.value.match(/\$([0-9,]+)/);
+            if (dollarMatch) {
+                valueBadge.textContent = `~${dollarMatch[0]}`;
+            } else {
+                valueBadge.textContent = 'Valuable';
+            }
+            
+            // Show results
+            results.style.display = 'block';
+            
+            // Scroll to results
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function extractSection(text, sectionName) {
+            // Create a regex to find the section content
+            const regex = new RegExp(`${sectionName}:[\\s\\n]*([^]*?)(?=\\d+\\.\\s|$)`, 'i');
+            const match = text.match(regex);
+            
+            if (match && match[1]) {
+                return match[1].trim();
+            }
+            
+            return null;
+        }
+        
+        function isValidDomain(domain) {
+            // Simple domain validation
+            const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+            return domainRegex.test(domain);
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        // Initialize with example if needed
+        domainInput.value = "example.com";
+    </script>
+</body>
+</html>
